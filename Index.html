@@ -1,0 +1,1130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employee Card Generator - Drag & Drop Table</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0096db 0%, #c02222 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .upload-section {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+
+        h3 {
+            color: #0096db;
+            margin: 15px 0 10px 0;
+        }
+
+        .upload-box {
+            border: 2px dashed #0096db;
+            border-radius: 10px;
+            padding: 30px;
+            text-align: center;
+            margin: 20px 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .upload-box:hover {
+            background: #f0f9ff;
+            border-color: #c02222;
+        }
+
+        .upload-box input {
+            display: none;
+        }
+
+        .upload-btn {
+            background: linear-gradient(135deg, #0096db 0%, #c02222 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+            margin: 10px;
+        }
+
+        .upload-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,150,219,0.3);
+        }
+
+        /* CSV Guide */
+        .csv-guide {
+            background: #e8f4fd;
+            border-left: 4px solid #0096db;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 8px;
+            font-size: 13px;
+        }
+
+        .csv-guide table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .csv-guide td {
+            padding: 5px 10px;
+            border-bottom: 1px solid #cce5f5;
+        }
+
+        .csv-guide td:first-child {
+            font-weight: bold;
+            color: #c02222;
+            width: 35%;
+        }
+
+        /* Table Preview Section */
+        .table-preview-section {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            display: none;
+        }
+
+        .table-container {
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+
+        .employee-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        .employee-table th {
+            background: linear-gradient(135deg, #0096db 0%, #c02222 100%);
+            color: white;
+            padding: 12px 8px;
+            position: sticky;
+            top: 0;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .employee-table td {
+            padding: 10px 8px;
+            border-bottom: 1px solid #eee;
+            background: white;
+        }
+
+        .employee-table tr {
+            cursor: grab;
+            transition: background 0.2s;
+        }
+
+        .employee-table tr:active {
+            cursor: grabbing;
+        }
+
+        .employee-table tr.drag-over {
+            border-top: 2px solid #c02222;
+        }
+
+        .employee-table tr:hover {
+            background: #f0f9ff;
+        }
+
+        .drag-handle {
+            cursor: grab;
+            text-align: center;
+            font-size: 18px;
+            color: #0096db;
+            width: 40px;
+        }
+
+        .drag-handle:active {
+            cursor: grabbing;
+        }
+
+        .grade-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: bold;
+            background: #e8f4fd;
+            color: #0096db;
+        }
+
+        .grade-high { background: #c02222; color: white; }
+        .grade-mid { background: #0096db; color: white; }
+        .grade-low { background: #6c757d; color: white; }
+
+        .table-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .reset-order-btn {
+            background: #6c757d;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 13px;
+        }
+
+        .reset-order-btn:hover {
+            background: #5a6268;
+        }
+
+        /* Customization Panel */
+        .customization-panel {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            display: none;
+        }
+
+        .panel-title {
+            color: #0096db;
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #c02222;
+            padding-bottom: 10px;
+        }
+
+        .customization-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .customization-item {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+        }
+
+        .customization-item label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .customization-item select, 
+        .customization-item input[type="color"],
+        .customization-item input[type="number"] {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #0096db;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .pattern-buttons, .layout-buttons, .frame-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .pattern-btn, .layout-btn {
+            padding: 8px 15px;
+            border: 1px solid #0096db;
+            border-radius: 5px;
+            background: white;
+            color: #0096db;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 13px;
+        }
+
+        .pattern-btn:hover, .pattern-btn.active,
+        .layout-btn:hover, .layout-btn.active {
+            background: linear-gradient(135deg, #0096db 0%, #c02222 100%);
+            color: white;
+        }
+
+        .frame-btn {
+            width: 40px;
+            height: 40px;
+            border: 2px solid #0096db;
+            border-radius: 5px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+        }
+
+        .frame-btn:hover, .frame-btn.active {
+            background: #0096db;
+            color: white;
+        }
+
+        .frame-btn.square { border-radius: 0; }
+        .frame-btn.rounded { border-radius: 10px; }
+        .frame-btn.circle { border-radius: 50%; }
+
+        .preview-section {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            display: none;
+        }
+
+        .bg-dots { background-image: radial-gradient(#0096db 1px, transparent 1px); background-size: 20px 20px; }
+        .bg-lines { background: repeating-linear-gradient(45deg, #0096db 0px, #0096db 2px, transparent 2px, transparent 10px); }
+        .bg-grid { background-image: linear-gradient(#0096db 1px, transparent 1px), linear-gradient(90deg, #0096db 1px, transparent 1px); background-size: 20px 20px; }
+
+        .card-container {
+            width: 1100px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            padding: 20px;
+            background: linear-gradient(135deg, #f0f9ff 0%, #fff1f0 100%);
+            border-radius: 15px;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s;
+        }
+
+        .employee-card {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 4px 15px rgba(0,150,219,0.1);
+            border: 1px solid rgba(0,150,219,0.2);
+            transition: transform 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+        }
+
+        .employee-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(192,34,34,0.15);
+        }
+
+        .employee-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #0096db, #c02222);
+        }
+
+        .photo {
+            width: 180px;
+            height: 220px;
+            margin: 0 auto 15px;
+            overflow: hidden;
+            border: 3px solid white;
+            box-shadow: 0 4px 10px rgba(0,150,219,0.3);
+            background: #f0f0f0;
+            position: relative;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .photo.square { border-radius: 0; }
+        .photo.rounded { border-radius: 15px; }
+        .photo.circle { border-radius: 50%; width: 180px; height: 180px; }
+
+        .photo img {
+            max-width: 100%;
+            max-height: 100%;
+            width: auto;
+            height: auto;
+            object-fit: contain;
+            display: block;
+            transition: transform 0.3s ease;
+        }
+
+        .photo .placeholder {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #0096db 0%, #c02222 100%);
+            color: white;
+            font-size: 72px;
+            font-weight: bold;
+        }
+
+        .info { text-align: center; }
+        .employee-name { font-size: 17px; font-weight: 600; color: #0096db; margin-bottom: 5px; }
+        .employee-id { font-size: 12px; color: #c02222; font-weight: 500; margin-bottom: 8px; background: rgba(192,34,34,0.1); display: inline-block; padding: 2px 10px; border-radius: 12px; }
+        .designation-title { font-size: 15px; color: #555; font-weight: 500; margin-bottom: 5px; }
+        .business-unit { font-size: 13px; color: #777; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px dashed #0096db; }
+        .details { font-size: 12px; color: #666; text-align: left; margin-top: 10px; }
+        .details p { margin: 7px 0; display: flex; align-items: center; gap: 8px; word-break: break-all; }
+        .details p i { color: #0096db; font-style: normal; min-width: 20px; }
+        .details p span { flex: 1; text-align: center; }
+
+        .company-header {
+            background: white;
+            padding: 40px 30px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        .welcome-image-container { margin: 20px auto; }
+        .welcome-image-container img { max-width: 500px; height: auto; display: block; margin: 0 auto; cursor: pointer; }
+        .welcome-date { font-size: 18px; color: #c02222; font-weight: 600; margin: 0 0 20px; }
+        .welcome-date input { font-size: 18px; color: #c02222; font-weight: 600; border: 1px dashed #0096db; padding: 5px 15px; border-radius: 20px; text-align: center; width: 250px; }
+        .welcome-message { max-width: 800px; margin: 0 auto; font-size: 16px; color: #2c3e50; line-height: 1.6; }
+        .end-message { max-width: 800px; margin: 30px auto 0; font-size: 18px; color: #2c3e50; text-align: center; border-top: 2px dashed #0096db; padding-top: 30px; }
+
+        .quality-selector {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-top: 15px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            flex-wrap: wrap;
+        }
+        .quality-selector label { margin: 0; font-weight: 600; color: #0096db; }
+        .quality-btn {
+            padding: 5px 12px;
+            border: 1px solid #0096db;
+            border-radius: 20px;
+            background: white;
+            color: #0096db;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s;
+        }
+        .quality-btn:hover, .quality-btn.active {
+            background: linear-gradient(135deg, #0096db 0%, #c02222 100%);
+            color: white;
+        }
+
+        .export-options { display: flex; gap: 15px; justify-content: center; flex-wrap: wrap; margin-top: 30px; }
+        .download-btn { color: white; border: none; padding: 12px 28px; border-radius: 30px; font-size: 15px; cursor: pointer; font-weight: 600; }
+        .download-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .status { text-align: center; margin: 10px 0; padding: 10px; border-radius: 8px; }
+        .status.success { background: #d4edda; color: #155724; }
+        .status.error { background: #f8d7da; color: #721c24; }
+        .status.info { background: #d1ecf1; color: #0c5460; }
+        .file-info { margin: 10px 0; color: #0096db; font-weight: 500; }
+
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9999; align-items: center; justify-content: center; }
+        .modal.active { display: flex; }
+        .modal-content { background: white; border-radius: 15px; padding: 30px; max-width: 500px; width: 90%; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .modal-header h3 { color: #0096db; }
+        .close-btn { background: none; border: none; font-size: 24px; cursor: pointer; color: #999; }
+        .close-btn:hover { color: #c02222; }
+        .photo-preview { width: 180px; height: 220px; border: 3px solid #0096db; border-radius: 8px; margin: 0 auto 20px; overflow: hidden; background: white; display: flex; align-items: center; justify-content: center; }
+        .photo-preview img { max-width: 100%; max-height: 100%; object-fit: contain; }
+        .controls { margin: 20px 0; }
+        .control-group { margin-bottom: 20px; }
+        .control-group label { display: block; margin-bottom: 8px; font-weight: 500; }
+        .slider-container { display: flex; align-items: center; gap: 10px; }
+        .slider { flex: 1; height: 6px; border-radius: 3px; background: #ddd; -webkit-appearance: none; }
+        .slider::-webkit-slider-thumb { -webkit-appearance: none; width: 20px; height: 20px; border-radius: 50%; background: linear-gradient(135deg, #0096db 0%, #c02222 100%); cursor: pointer; }
+        .control-buttons { display: flex; gap: 10px; justify-content: center; margin-top: 10px; }
+        .control-btn { background: #0096db; color: white; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; }
+        .control-btn:hover { background: #c02222; }
+        .action-buttons { display: flex; gap: 10px; margin-top: 20px; }
+        .action-buttons button { flex: 1; padding: 12px; border-radius: 8px; border: none; font-size: 16px; font-weight: 600; cursor: pointer; }
+        .save-btn { background: #28a745; color: white; }
+        .cancel-btn { background: #6c757d; color: white; }
+        .upload-photo-btn { background: linear-gradient(135deg, #0096db 0%, #c02222 100%); color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; width: 100%; font-size: 16px; font-weight: 600; margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="upload-section">
+            <h2>📤 Upload Employee Details</h2>
+            
+            <div class="csv-guide">
+                <h4>📋 CSV Format Required (Headers must match exactly):</h4>
+                <table>
+                    <tr><th>Header Name</th><th>Description</th></tr>
+                    <tr><td>Employee Name</td><td>Full name of employee</td></tr>
+                    <tr><td>Employee Id</td><td>Unique ID (used for photo matching)</td></tr>
+                    <tr><td>Official Email Id</td><td>Email address</td></tr>
+                    <tr><td>Personal Mobile Number</td><td>Phone number</td></tr>
+                    <tr><td>Business Unit</td><td>Division/BU</td></tr>
+                    <tr><td>Department Name</td><td>Department</td></tr>
+                    <tr><td>Designation Title</td><td>Job title (used for grade sorting)</td></tr>
+                    <tr><td>Office Location</td><td>Work location</td></tr>
+                </table>
+                <p style="margin-top: 10px; color: #666;">✅ Columns can be in ANY order. Empty rows will be ignored automatically.</p>
+            </div>
+
+            <div class="upload-box" onclick="document.getElementById('csvFile').click()">
+                <input type="file" id="csvFile" accept=".csv">
+                <span style="font-size: 48px;">📊</span>
+                <h3 style="color: #0096db;">Drop CSV file here or click to upload</h3>
+                <button class="upload-btn" onclick="event.stopPropagation(); document.getElementById('csvFile').click()">Choose CSV</button>
+            </div>
+            <div id="csvStatus" class="file-info"></div>
+
+            <div class="upload-box" onclick="document.getElementById('photos').click()">
+                <input type="file" id="photos" multiple accept="image/*">
+                <span style="font-size: 48px;">📸</span>
+                <h3 style="color: #c02222;">Drop Photos here or click to upload</h3>
+                <p>Upload employee photos - filename should match <strong>Employee Id</strong> (e.g., "EMP001.jpg")</p>
+                <p>Also upload: <strong>Welcome.png</strong> (design image)</p>
+                <button class="upload-btn" onclick="event.stopPropagation(); document.getElementById('photos').click()">Choose Photos</button>
+            </div>
+            <div id="photosStatus" class="file-info"></div>
+        </div>
+
+        <!-- Table Preview Section (Shows after CSV upload) -->
+        <div class="table-preview-section" id="tablePreviewSection">
+            <div class="table-info">
+                <h3>📋 Employee List (Sorted by Grade | Drag to Reorder)</h3>
+                <button class="reset-order-btn" onclick="resetToGradeOrder()">↺ Reset to Grade Order</button>
+            </div>
+            <div class="table-container" id="tableContainer">
+                <table class="employee-table" id="employeeTable">
+                    <thead>
+                        <tr><th style="width:40px">⋮⋮</th><th>Employee Name</th><th>Employee ID</th><th>Designation</th><th>Grade</th><th>Department</th><th>Location</th></tr>
+                    </thead>
+                    <tbody id="tableBody"></tbody>
+                </table>
+            </div>
+            <div style="margin-top: 15px; text-align: center;">
+                <button class="upload-btn" onclick="generateCardsFromOrder()" style="font-size: 18px; padding: 12px 30px;">🎴 Generate Cards (Use Current Order)</button>
+            </div>
+        </div>
+
+        <div class="customization-panel" id="customizationPanel">
+            <div class="panel-title">🎨 Customization Options</div>
+            <div class="customization-grid">
+                <div class="customization-item">
+                    <label>Background Color</label>
+                    <input type="color" id="bgColor" value="#f0f9ff" onchange="updateBackground()">
+                    <label style="margin-top: 10px;">Pattern</label>
+                    <div class="pattern-buttons">
+                        <button class="pattern-btn active" onclick="setPattern('none')">None</button>
+                        <button class="pattern-btn" onclick="setPattern('dots')">Dots</button>
+                        <button class="pattern-btn" onclick="setPattern('lines')">Lines</button>
+                        <button class="pattern-btn" onclick="setPattern('grid')">Grid</button>
+                    </div>
+                    <label style="margin-top: 10px;"><input type="checkbox" id="removeBackground" onchange="toggleBackground()"> Remove Container BG</label>
+                </div>
+                <div class="customization-item">
+                    <label>Card Layout</label>
+                    <div class="layout-buttons">
+                        <button class="layout-btn active" onclick="setCardLayout('default')">Default</button>
+                        <button class="layout-btn" onclick="setCardLayout('minimal')">Minimal</button>
+                        <button class="layout-btn" onclick="setCardLayout('professional')">Pro</button>
+                        <button class="layout-btn" onclick="setCardLayout('fun')">Fun</button>
+                    </div>
+                    <label>Photo Frame</label>
+                    <div class="frame-buttons">
+                        <button class="frame-btn square active" onclick="setFrameStyle('square')">□</button>
+                        <button class="frame-btn rounded" onclick="setFrameStyle('rounded')">⌑</button>
+                        <button class="frame-btn circle" onclick="setFrameStyle('circle')">○</button>
+                    </div>
+                    <label>Columns</label>
+                    <select onchange="setColumns(this.value)"><option value="2">2 Columns</option><option value="3" selected>3 Columns</option><option value="4">4 Columns</option></select>
+                </div>
+            </div>
+        </div>
+
+        <div class="preview-section" id="previewSection">
+            <h2 style="color: #0096db;">✨ Employee Cards (Your Custom Order)</h2>
+            <div id="companyHeader" class="company-header">
+                <div class="welcome-image-container">
+                    <img id="welcomeImage" src="" style="display: none; cursor: pointer;" onclick="openWelcomeEditor()">
+                    <div id="welcomePlaceholder" style="padding:20px; border:2px dashed #ddd; cursor:pointer;" onclick="document.getElementById('welcomeUpload').click()">📷 Click to Upload Welcome Design (Welcome.png)</div>
+                    <input type="file" id="welcomeUpload" accept="image/*" style="display:none;">
+                </div>
+                <div class="welcome-date"><input type="text" id="editableDate" value="(16th–28th Feb'26)"></div>
+                <div class="welcome-message"><p id="welcomeParagraph">We are delighted to introduce our newest team members!<br>Please join us in welcoming them to the family.</p></div>
+            </div>
+            <div id="cardContainer" class="card-container"></div>
+            <div class="end-message"><p>A warm welcome to our new colleagues on behalf of everyone.</p><p><strong>Welcome aboard!</strong></p></div>
+            
+            <div class="quality-selector">
+                <label>📸 Image Quality:</label>
+                <button class="quality-btn" data-quality="1.0">100% (Best)</button>
+                <button class="quality-btn" data-quality="0.8">80%</button>
+                <button class="quality-btn" data-quality="0.6">60%</button>
+                <button class="quality-btn" data-quality="0.4">40%</button>
+                <button class="quality-btn" data-quality="0.2">20% (Smallest)</button>
+            </div>
+            
+            <div class="export-options">
+                <button class="download-btn" onclick="downloadImage('png')" style="background:#27ae60;">📸 PNG (Lossless)</button>
+                <button class="download-btn" onclick="downloadImage('jpg')" style="background:#3498db;">🖼️ JPG</button>
+            </div>
+            <div id="downloadStatus" class="status"></div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <div class="modal" id="photoEditor"><div class="modal-content"><div class="modal-header"><h3>📸 Edit Photo</h3><button class="close-btn" onclick="closePhotoEditor()">&times;</button></div><div class="photo-preview" id="editorPreview"><div class="placeholder">?</div></div><div class="controls"><input type="file" id="photoUploadInput" accept="image/*" style="display:none;"><button class="upload-photo-btn" onclick="document.getElementById('photoUploadInput').click()">📤 Upload New Photo</button><div class="control-group"><label>🔍 Zoom / Scale</label><div class="slider-container"><input type="range" class="slider" id="zoomSlider" min="30" max="200" value="100"><span class="slider-value" id="zoomValue">100%</span></div></div><div class="control-group"><label>📐 Position</label><div class="control-buttons"><button class="control-btn" onclick="adjustPosition('up')">⬆️ Up</button><button class="control-btn" onclick="adjustPosition('down')">⬇️ Down</button><button class="control-btn" onclick="adjustPosition('left')">⬅️ Left</button><button class="control-btn" onclick="adjustPosition('right')">➡️ Right</button></div><div class="slider-container" style="margin-top: 10px;"><span>X:</span><input type="range" id="xSlider" min="-100" max="100" value="0"><span id="xValue">0</span></div><div class="slider-container"><span>Y:</span><input type="range" id="ySlider" min="-100" max="100" value="0"><span id="yValue">0</span></div></div></div><div class="action-buttons"><button class="save-btn" onclick="savePhotoEdits()">✅ Save</button><button class="cancel-btn" onclick="closePhotoEditor()">❌ Cancel</button></div></div></div>
+    <div class="modal" id="welcomeEditor"><div class="modal-content"><div class="modal-header"><h3>🖼️ Edit Welcome Design</h3><button class="close-btn" onclick="closeWelcomeEditor()">&times;</button></div><img id="welcomeEditorImage" style="max-width:100%; margin-bottom:20px;"><div class="controls"><input type="file" id="welcomeImageUpload" accept="image/*" style="display:none;"><button class="upload-photo-btn" onclick="document.getElementById('welcomeImageUpload').click()">📤 Upload New Image</button><div class="control-group"><label>Image Height</label><div class="slider-container"><input type="range" id="welcomeEditHeightSlider" min="100" max="500" value="300"><span id="welcomeEditHeightValue">300px</span></div></div></div><div class="action-buttons"><button class="save-btn" onclick="saveWelcomeEdits()">✅ Save</button><button class="cancel-btn" onclick="closeWelcomeEditor()">❌ Cancel</button></div></div></div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script>
+        let originalEmployees = [];
+        let currentEmployees = [];
+        let photoFiles = {};
+        let currentQuality = 1.0;
+        let columnMapping = {};
+        let dragSrcIndex = null;
+
+        // Grade Mapping
+        const gradeOrder = {
+            "G6C":100,"G6B":99,"G6A":98,"G5B":97,"G5A":96,"G4C":95,"G4B":94,"G4A":93,
+            "G3D":92,"G3C":91,"G3B":90,"G3A":89,"G2G":88,"G2F":87,"G2E":86,"G2D":85,
+            "G2C":84,"G2B":83,"G2A":82,"G1D":81,"G1C":80,"G1B":79,"G1A":78,"G0B":77,"G0A":76
+        };
+        const designationToGrade = {
+            "Managing Director":"G6C","Joint Managing Director":"G6B","Whole Time Director":"G6A",
+            "Chief Executive of Businesses":"G5B","Chief of Functions":"G5B","Advisor":"G5B","Business Head":"G5A",
+            "Senior Vice President":"G4C","Vice President":"G4B","Associate Vice President":"G4A","Functional Head":"G4A",
+            "General Manager":"G3D","Deputy General Manager":"G3C","Assistant General Manager":"G3B","Senior Manager":"G3A",
+            "Manager":"G2G","Deputy Manager":"G2F","Assistant Manager":"G2E","Senior Engineer":"G2D","Senior Officer":"G2D",
+            "Engineer":"G2C","Officer I":"G2C","Graduate Engineer Trainee":"G2B","Management Trainee":"G2B","Officer II":"G2B",
+            "Officer III":"G2A","Design Associate I":"G1D","Assistant Officer":"G1D","Assistant Engineer":"G1D",
+            "Design Associate II":"G1C","Junior Officer":"G1C","Junior Engineer":"G1C","Diploma Engineer Trainee":"G1C","Senior Draughtsman":"G1C",
+            "Design Associate III":"G1B","Supervisor":"G1B","Assistant":"G1B","Teacher":"G1B","Draughtsman":"G1B",
+            "Junior Draughtsman":"G1A","Design Associate IV":"G1A","Assistant Supervisor":"G1A","Junior Assistant":"G1A",
+            "Office Assistant":"G0B","ITI Trainee":"G0B","Workmen - I":"G0B","Workmen - II":"G0A"
+        };
+        
+        function getGradeFromDesignation(designation) {
+            if (!designation) return "G0A";
+            if (designationToGrade[designation.trim()]) return designationToGrade[designation.trim()];
+            for (let [key, grade] of Object.entries(designationToGrade)) {
+                if (designation.toLowerCase().includes(key.toLowerCase())) return grade;
+            }
+            return "G0A";
+        }
+        
+        function getGradeOrder(designation) {
+            return gradeOrder[getGradeFromDesignation(designation)] || 0;
+        }
+
+        function sortByGrade(employees) {
+            return [...employees].sort((a,b) => getGradeOrder(b.designation) - getGradeOrder(a.designation));
+        }
+
+        // CSV Parser - Ignores empty rows
+        function parseCSV(csvText) {
+            const lines = csvText.trim().split(/\r?\n/);
+            if (lines.length < 2) return [];
+            
+            const headers = parseCSVLine(lines[0]);
+            const mapping = detectColumns(headers);
+            
+            const missing = [];
+            if (mapping.name === null) missing.push("Employee Name");
+            if (mapping.empId === null) missing.push("Employee Id");
+            if (mapping.designation === null) missing.push("Designation Title");
+            
+            if (missing.length > 0) {
+                alert(`⚠️ Missing required columns: ${missing.join(", ")}`);
+                return [];
+            }
+            
+            columnMapping = mapping;
+            const employees = [];
+            
+            for (let i = 1; i < lines.length; i++) {
+                const line = lines[i].trim();
+                if (!line) continue; // Skip empty lines
+                
+                const values = parseCSVLine(line);
+                // Skip if Employee Name and Employee ID are both empty
+                const empName = mapping.name !== null ? (values[mapping.name] || '').trim() : '';
+                const empId = mapping.empId !== null ? (values[mapping.empId] || '').trim() : '';
+                
+                if (!empName && !empId) continue; // Skip completely empty rows
+                
+                employees.push({
+                    name: empName || '—',
+                    empId: empId || '—',
+                    email: mapping.email !== null ? (values[mapping.email] || '—') : '—',
+                    phone: mapping.phone !== null ? (values[mapping.phone] || '—') : '—',
+                    businessUnit: mapping.businessUnit !== null ? (values[mapping.businessUnit] || '—') : '—',
+                    department: mapping.department !== null ? (values[mapping.department] || '—') : '—',
+                    designation: mapping.designation !== null ? (values[mapping.designation] || '—') : '—',
+                    location: mapping.location !== null ? (values[mapping.location] || '—') : '—'
+                });
+            }
+            return employees;
+        }
+        
+        function detectColumns(headers) {
+            return {
+                name: headers.findIndex(h => h.trim() === "Employee Name"),
+                empId: headers.findIndex(h => h.trim() === "Employee Id"),
+                email: headers.findIndex(h => h.trim() === "Official Email Id"),
+                phone: headers.findIndex(h => h.trim() === "Personal Mobile Number"),
+                businessUnit: headers.findIndex(h => h.trim() === "Business Unit"),
+                department: headers.findIndex(h => h.trim() === "Department Name"),
+                designation: headers.findIndex(h => h.trim() === "Designation Title"),
+                location: headers.findIndex(h => h.trim() === "Office Location")
+            };
+        }
+        
+        function parseCSVLine(line) {
+            const values = [];
+            let current = '', inQuotes = false;
+            for (let i = 0; i < line.length; i++) {
+                const char = line[i];
+                if (char === '"') inQuotes = !inQuotes;
+                else if (char === ',' && !inQuotes) { values.push(current); current = ''; }
+                else current += char;
+            }
+            values.push(current);
+            return values.map(v => v.replace(/^"|"$/g, '').trim());
+        }
+        
+        function showStatus(id, msg, type) {
+            const el = document.getElementById(id);
+            el.innerHTML = msg;
+            el.className = `status ${type}`;
+        }
+
+        // Render Table with Drag & Drop
+        function renderTable() {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+            
+            currentEmployees.forEach((emp, index) => {
+                const grade = getGradeFromDesignation(emp.designation);
+                let gradeClass = 'grade-badge';
+                const gradeNum = gradeOrder[grade] || 0;
+                if (gradeNum >= 90) gradeClass += ' grade-high';
+                else if (gradeNum >= 80) gradeClass += ' grade-mid';
+                
+                const row = tbody.insertRow();
+                row.draggable = true;
+                row.setAttribute('data-index', index);
+                
+                // Drag handle cell
+                const dragCell = row.insertCell(0);
+                dragCell.className = 'drag-handle';
+                dragCell.innerHTML = '⋮⋮';
+                dragCell.style.cursor = 'grab';
+                
+                row.insertCell(1).innerHTML = emp.name;
+                row.insertCell(2).innerHTML = emp.empId;
+                row.insertCell(3).innerHTML = emp.designation;
+                row.insertCell(4).innerHTML = `<span class="${gradeClass}">${grade}</span>`;
+                row.insertCell(5).innerHTML = emp.department;
+                row.insertCell(6).innerHTML = emp.location;
+                
+                // Drag events
+                row.addEventListener('dragstart', handleDragStart);
+                row.addEventListener('dragover', handleDragOver);
+                row.addEventListener('dragenter', handleDragEnter);
+                row.addEventListener('dragend', handleDragEnd);
+                row.addEventListener('drop', handleDrop);
+            });
+        }
+        
+        function handleDragStart(e) {
+            dragSrcIndex = parseInt(e.target.closest('tr').getAttribute('data-index'));
+            e.dataTransfer.effectAllowed = 'move';
+            e.target.closest('tr').style.opacity = '0.5';
+        }
+        
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+        }
+        
+        function handleDragEnter(e) {
+            e.preventDefault();
+            const targetRow = e.target.closest('tr');
+            if (targetRow && targetRow.getAttribute('data-index') != dragSrcIndex) {
+                targetRow.classList.add('drag-over');
+            }
+        }
+        
+        function handleDragEnd(e) {
+            document.querySelectorAll('.employee-table tr').forEach(row => {
+                row.style.opacity = '';
+                row.classList.remove('drag-over');
+            });
+        }
+        
+        function handleDrop(e) {
+            e.preventDefault();
+            const targetRow = e.target.closest('tr');
+            if (!targetRow) return;
+            
+            const dragIndex = dragSrcIndex;
+            const dropIndex = parseInt(targetRow.getAttribute('data-index'));
+            
+            if (dragIndex !== null && dragIndex !== dropIndex) {
+                const reordered = [...currentEmployees];
+                const [movedItem] = reordered.splice(dragIndex, 1);
+                reordered.splice(dropIndex, 0, movedItem);
+                currentEmployees = reordered;
+                renderTable();
+            }
+            
+            document.querySelectorAll('.employee-table tr').forEach(row => {
+                row.classList.remove('drag-over');
+            });
+            dragSrcIndex = null;
+        }
+        
+        function resetToGradeOrder() {
+            currentEmployees = sortByGrade(originalEmployees);
+            renderTable();
+            showStatus('csvStatus', '✅ Reset to grade order (High to Low)', 'success');
+        }
+
+        // CSV Upload Handler
+        document.getElementById('csvFile').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const employees = parseCSV(e.target.result);
+                if (employees.length) {
+                    originalEmployees = employees;
+                    currentEmployees = sortByGrade(originalEmployees);
+                    renderTable();
+                    document.getElementById('tablePreviewSection').style.display = 'block';
+                    document.getElementById('customizationPanel').style.display = 'block';
+                    showStatus('csvStatus', `✅ ${employees.length} employees loaded! Empty rows ignored. Drag rows to reorder.`, 'success');
+                    
+                    // Show debug info
+                    const gradeCount = {};
+                    currentEmployees.forEach(emp => {
+                        const g = getGradeFromDesignation(emp.designation);
+                        gradeCount[g] = (gradeCount[g] || 0) + 1;
+                    });
+                    console.log('Grade distribution:', gradeCount);
+                } else showStatus('csvStatus', '❌ No valid data. Check column headers.', 'error');
+            };
+            reader.readAsText(file, 'UTF-8');
+        });
+
+        // Photos Upload
+        document.getElementById('photos').addEventListener('change', function(e) {
+            const files = Array.from(e.target.files);
+            photoFiles = {};
+            files.forEach(file => {
+                const reader = new FileReader();
+                reader.onload = ev => {
+                    photoFiles[file.name] = ev.target.result;
+                    if (file.name.toLowerCase() === 'welcome.png') {
+                        document.getElementById('welcomeImage').src = ev.target.result;
+                        document.getElementById('welcomeImage').style.display = 'block';
+                        document.getElementById('welcomePlaceholder').style.display = 'none';
+                    }
+                };
+                reader.readAsDataURL(file);
+            });
+            showStatus('photosStatus', `📸 ${files.length} files received`, 'info');
+        });
+
+        document.getElementById('welcomeUpload').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = ev => {
+                    photoFiles['welcome.png'] = ev.target.result;
+                    document.getElementById('welcomeImage').src = ev.target.result;
+                    document.getElementById('welcomeImage').style.display = 'block';
+                    document.getElementById('welcomePlaceholder').style.display = 'none';
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Generate Cards from Current Order
+        function generateCardsFromOrder() {
+            if (!currentEmployees.length) { alert('No employees loaded'); return; }
+            
+            const container = document.getElementById('cardContainer');
+            container.innerHTML = '';
+            let matched = 0;
+            
+            for (let emp of currentEmployees) {
+                const card = document.createElement('div');
+                card.className = 'employee-card';
+                const photoDiv = document.createElement('div');
+                photoDiv.className = 'photo';
+                let photoData = null;
+                for (let ext of ['.jpg','.jpeg','.png','.JPG','.JPEG','.PNG']) {
+                    if (photoFiles[emp.empId + ext]) { photoData = photoFiles[emp.empId + ext]; break; }
+                }
+                if (photoData) {
+                    const img = document.createElement('img');
+                    img.src = photoData;
+                    photoDiv.appendChild(img);
+                    matched++;
+                } else {
+                    const placeholder = document.createElement('div');
+                    placeholder.className = 'placeholder';
+                    placeholder.textContent = emp.name.charAt(0).toUpperCase();
+                    photoDiv.appendChild(placeholder);
+                }
+                const infoDiv = document.createElement('div');
+                infoDiv.className = 'info';
+                infoDiv.innerHTML = `
+                    <div class="employee-name">${emp.name}</div>
+                    <div class="employee-id">${emp.empId}</div>
+                    <div class="designation-title">${emp.designation}</div>
+                    <div class="business-unit">${emp.businessUnit} ${emp.businessUnit && emp.department !== '—' ? '|' : ''} ${emp.department !== '—' ? emp.department : ''}</div>
+                    <div class="details">
+                        <p><i>✉️</i> <span>${emp.email}</span></p>
+                        <p><i>📞</i> <span>${emp.phone}</span></p>
+                        <p><i>📍</i> <span>${emp.location}</span></p>
+                    </div>
+                `;
+                card.appendChild(photoDiv);
+                card.appendChild(infoDiv);
+                container.appendChild(card);
+            }
+            
+            // Center last row
+            const total = currentEmployees.length;
+            if (total % 3 === 1 && container.children[total-1]) container.children[total-1].style.gridColumn = '2 / 3';
+            else if (total % 3 === 2) {
+                if (container.children[total-2]) container.children[total-2].style.justifySelf = 'end';
+                if (container.children[total-1]) container.children[total-1].style.justifySelf = 'start';
+            }
+            
+            document.getElementById('previewSection').style.display = 'block';
+            addPhotoClickHandlers();
+            alert(`✅ Generated ${currentEmployees.length} cards in your custom order!\n📸 Photos matched: ${matched}/${currentEmployees.length}`);
+        }
+
+        // Quality selector
+        document.querySelectorAll('.quality-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.quality-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                currentQuality = parseFloat(this.dataset.quality);
+            });
+        });
+        if(document.querySelector('.quality-btn')) document.querySelector('.quality-btn').classList.add('active');
+
+        // Photo Editor
+        let currentEditingCard = null, currentPhotoData = null, currentEmpId = '';
+        function addPhotoClickHandlers() {
+            document.querySelectorAll('.employee-card').forEach((card) => {
+                const photo = card.querySelector('.photo');
+                const idDiv = card.querySelector('.employee-id');
+                const empId = idDiv ? idDiv.innerText : '';
+                photo.addEventListener('click', () => openPhotoEditor(card, empId));
+            });
+        }
+        function openPhotoEditor(card, empId) {
+            currentEditingCard = card;
+            currentEmpId = empId;
+            const img = card.querySelector('.photo img');
+            const preview = document.getElementById('editorPreview');
+            if (img) {
+                currentPhotoData = img.src;
+                preview.innerHTML = `<img src="${currentPhotoData}" id="editorImage">`;
+                document.getElementById('zoomSlider').value = 100;
+                document.getElementById('xSlider').value = 0;
+                document.getElementById('ySlider').value = 0;
+                document.getElementById('zoomValue').innerText = '100%';
+                document.getElementById('xValue').innerText = '0';
+                document.getElementById('yValue').innerText = '0';
+                const editorImg = document.getElementById('editorImage');
+                if (editorImg) editorImg.style.transform = 'scale(1) translate(0%, 0%)';
+            } else {
+                preview.innerHTML = '<div class="placeholder">?</div>';
+                currentPhotoData = null;
+            }
+            document.getElementById('photoEditor').classList.add('active');
+        }
+        function closePhotoEditor() { document.getElementById('photoEditor').classList.remove('active'); }
+        function updatePhotoTransform() {
+            const img = document.getElementById('editorImage');
+            if (!img) return;
+            const scale = document.getElementById('zoomSlider').value / 100;
+            const x = parseInt(document.getElementById('xSlider').value);
+            const y = parseInt(document.getElementById('ySlider').value);
+            img.style.transform = `scale(${scale}) translate(${x}%, ${y}%)`;
+        }
+        document.getElementById('zoomSlider').addEventListener('input', function() {
+            document.getElementById('zoomValue').innerText = this.value + '%';
+            updatePhotoTransform();
+        });
+        document.getElementById('xSlider').addEventListener('input', function() {
+            document.getElementById('xValue').innerText = this.value;
+            updatePhotoTransform();
+        });
+        document.getElementById('ySlider').addEventListener('input', function() {
+            document.getElementById('yValue').innerText = this.value;
+            updatePhotoTransform();
+        });
+        function adjustPosition(dir) {
+            let x = parseInt(document.getElementById('xSlider').value);
+            let y = parseInt(document.getElementById('ySlider').value);
+            if (dir === 'up') y -= 10;
+            if (dir === 'down') y += 10;
+            if (dir === 'left') x -= 10;
+            if (dir === 'right') x += 10;
+            document.getElementById('xSlider').value = x;
+            document.getElementById('ySlider').value = y;
+            document.getElementById('xValue').innerText = x;
+            document.getElementById('yValue').innerText = y;
+            updatePhotoTransform();
+        }
+        document.getElementById('photoUploadInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = ev => {
+                    currentPhotoData = ev.target.result;
+                    document.getElementById('editorPreview').innerHTML = `<img src="${currentPhotoData}" id="editorImage">`;
+                    document.getElementById('zoomSlider').value = 100;
+                    document.getElementById('xSlider').value = 0;
+                    document.getElementById('ySlider').value = 0;
+                    updatePhotoTransform();
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+        function savePhotoEdits() {
+            if (currentEditingCard && currentPhotoData) {
+                const photoDiv = currentEditingCard.querySelector('.photo');
+                const scale = document.getElementById('zoomSlider').value / 100;
+                const x = parseInt(document.getElementById('xSlider').value);
+                const y = parseInt(document.getElementById('ySlider').value);
+                photoDiv.innerHTML = `<img src="${currentPhotoData}" style="transform: scale(${scale}) translate(${x}%, ${y}%);">`;
+                for (let ext of ['.jpg','.jpeg','.png']) {
+                    if (photoFiles[currentEmpId + ext]) photoFiles[currentEmpId + ext] = currentPhotoData;
+                }
+            }
+            closePhotoEditor();
+        }
+
+        // Welcome Editor
+        function openWelcomeEditor() { document.getElementById('welcomeEditor').classList.add('active'); }
+        function closeWelcomeEditor() { document.getElementById('welcomeEditor').classList.remove('active'); }
+        document.getElementById('welcomeImageUpload').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = ev => { document.getElementById('welcomeEditorImage').src = ev.target.result; };
+                reader.readAsDataURL(file);
+            }
+        });
+        function saveWelcomeEdits() {
+            const newSrc = document.getElementById('welcomeEditorImage').src;
+            if (newSrc) {
+                document.getElementById('welcomeImage').src = newSrc;
+                photoFiles['welcome.png'] = newSrc;
+            }
+            closeWelcomeEditor();
+        }
+        document.getElementById('welcomeEditHeightSlider').addEventListener('input', function() {
+            document.getElementById('welcomeEditHeightValue').innerText = this.value + 'px';
+            document.getElementById('welcomeEditorImage').style.maxHeight = this.value + 'px';
+        });
+
+        // Customization
+        function updateBackground() { document.getElementById('cardContainer').style.background = document.getElementById('bgColor').value; }
+        function setPattern(p) { const c = document.getElementById('cardContainer'); c.classList.remove('bg-dots','bg-lines','bg-grid'); if(p !== 'none') c.classList.add(`bg-${p}`); }
+        function toggleBackground() { const c = document.getElementById('cardContainer'); document.getElementById('removeBackground').checked ? c.classList.add('no-background') : c.classList.remove('no-background'); }
+        function setCardLayout(l) { document.querySelectorAll('.employee-card').forEach(card => { card.classList.remove('minimal','professional','fun'); if(l !== 'default') card.classList.add(l); }); }
+        function setFrameStyle(s) { document.querySelectorAll('.photo').forEach(p => { p.classList.remove('square','rounded','circle'); p.classList.add(s); }); }
+        function setColumns(c) { document.getElementById('cardContainer').style.gridTemplateColumns = `repeat(${c}, 1fr)`; }
+
+        // Export
+        async function downloadImage(format) {
+            const btns = document.querySelectorAll('.download-btn');
+            btns.forEach(b => b.disabled = true);
+            showStatus('downloadStatus', '⏳ Generating...', 'info');
+            try {
+                const ts = Date.now();
+                const temp = document.createElement('div');
+                temp.style.padding = '30px';
+                temp.style.background = '#f0f9ff';
+                temp.appendChild(document.getElementById('companyHeader').cloneNode(true));
+                temp.appendChild(document.getElementById('cardContainer').cloneNode(true));
+                temp.appendChild(document.querySelector('.end-message').cloneNode(true));
+                temp.style.position = 'absolute';
+                temp.style.left = '-9999px';
+                document.body.appendChild(temp);
+                
+                const canvas = await html2canvas(temp, { scale: 2, backgroundColor: '#f0f9ff', useCORS: true });
+                document.body.removeChild(temp);
+                
+                let quality = currentQuality;
+                if (format === 'png') quality = 1.0;
+                
+                const link = document.createElement('a');
+                link.download = `employee-cards-${ts}.${format}`;
+                if (format === 'jpg') {
+                    link.href = canvas.toDataURL('image/jpeg', quality);
+                    showStatus('downloadStatus', `✅ JPG downloaded (Quality: ${Math.round(quality*100)}%)`, 'success');
+                } else {
+                    link.href = canvas.toDataURL('image/png');
+                    showStatus('downloadStatus', '✅ PNG downloaded (Lossless)', 'success');
+                }
+                link.click();
+            } catch (err) {
+                showStatus('downloadStatus', '❌ Error: ' + err.message, 'error');
+            } finally {
+                btns.forEach(b => b.disabled = false);
+            }
+        }
+    </script>
+</body>
+</html>
